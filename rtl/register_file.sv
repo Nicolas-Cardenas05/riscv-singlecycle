@@ -13,8 +13,8 @@ module register_file (
 logic [31:0] registers [31:1];
 
 always_ff @( posedge clk)
-    if (write_enable && (address_result != 5'b0)) registers[address_result] <= write_data;
+    if (write_enable && (address_result != 5'd0)) registers[address_result] <= write_data;
 
-assign read_data_a = (address_a != 0) ? registers[address_a] : 0;
-assign read_data_b = (address_b != 0) ? registers[address_b] : 0;
+assign read_data_a = (address_a != 5'd0) ? registers[address_a] : 32'd0;
+assign read_data_b = (address_b != 5'd0) ? registers[address_b] : 32'd0;
 endmodule
