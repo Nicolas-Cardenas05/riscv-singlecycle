@@ -6,12 +6,14 @@ module alu_tb;
     logic [31:0] tb_operand_b;
     logic [2:0]  tb_alu_control;
     logic [31:0] tb_alu_result;
+    logic [31:0] tb_alu_address;
 
     alu dut (
         .operand_a(tb_operand_a),
         .operand_b(tb_operand_b),
         .alu_control(tb_alu_control),
-        .alu_result(tb_alu_result)
+        .alu_result(tb_alu_result),
+        .alu_address(tb_alu_address)
     );
 
     initial begin
@@ -29,6 +31,10 @@ module alu_tb;
         else
             $error("FAIL ADD: expected 20, got %0d", tb_alu_result);
 
+        if (tb_alu_address === 32'd20)
+            $display("PASS: ALU address 15 + 5 = 20");
+        else
+            $error("FAIL ALU ADDRESS: expected 20, got %0d", tb_alu_address);
 
         // SUB: 15 - 5 = 10
         tb_alu_control = 3'b001;
