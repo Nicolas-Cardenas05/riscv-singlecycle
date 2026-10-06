@@ -6,7 +6,7 @@ module pc_mux (
     output logic [31:0] pc_next
 );
 
-always_comb begin : pc_mux
+always_comb begin : pc_mux_logic
     case (pc_selector)
         1'b0 : pc_next = pc_plus_4;
         1'b1 : pc_next = alu_address;

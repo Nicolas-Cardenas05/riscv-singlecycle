@@ -1,0 +1,96 @@
+digraph RISCV {
+    graph [
+        rankdir=LR,
+        splines=ortho,
+        nodesep=0.8,
+        ranksep=1.2,
+        bgcolor="#111111"
+    ];
+
+    node [
+        shape=record,
+        fontname="Arial",
+        fontsize=10,
+        color="#3A8FB7",
+        fontcolor="white",
+        style="filled",
+        fillcolor="#202020"
+    ];
+
+    edge [
+        fontname="Arial",
+        fontsize=9,
+        color="#3A8FB7",
+        fontcolor="white"
+    ];
+
+    PCREG [
+        label="{PC Register|
+        {IN|clk\lreset\lpc_next\l}|
+        {OUT|pc\l}}"
+    ];
+
+    PCADD [
+        label="{PC Adder|
+        {IN|pc\l}|
+        {OUT|pc_plus_4\l}}"
+    ];
+
+    PCMUX [
+        label="{PC Mux|
+        {IN|pc_plus_4\lalu_address\lpc_selector\l}|
+        {OUT|pc_next\l}}"
+    ];
+
+    IROM [
+        label="{Instruction Memory|
+        {IN|pc\l}|
+        {OUT|instruction\l}}"
+    ];
+
+    RF [
+        label="{Register File|
+        {IN|clk\lwrite_enable\laddress_a\laddress_b\laddress_result\lwrite_data\l}|
+        {OUT|read_data_a\lread_data_b\l}}"
+    ];
+
+    EXT [
+        label="{Immediate Extender|
+        {IN|imm_instruction\limm_selector\l}|
+        {OUT|immediate\l}}"
+    ];
+
+    ALU [
+        label="{ALU|
+        {IN|operand_a\loperand_b\lalu_control\l}|
+        {OUT|alu_result\lalu_address\l}}"
+    ];
+
+    DMEM [
+        label="{Data Memory|
+        {IN|clk\lwrite_enable\lwrite_data\laddress\l}|
+        {OUT|read_data\l}}"
+    ];
+
+    CTRL [
+        label="{Controller|
+        {IN|???\l}|
+        {OUT|???\l}}"
+    ];
+
+    PCREG -> PCADD [label="pc"];
+    PCADD -> PCMUX [label="pc_plus_4"];
+    PCMUX -> PCREG [label="pc_next"];
+
+    PCREG -> IROM [label="pc"];
+
+    IROM -> RF [label="instruction fields"];
+    IROM -> EXT [label="instruction[31:7]"];
+    IROM -> CTRL [label="instruction fields"];
+
+    RF -> ALU [label="read data"];
+    EXT -> ALU [label="immediate"];
+
+    ALU -> PCMUX [label="alu_address"];
+    ALU -> DMEM [label="alu_address"];
+}

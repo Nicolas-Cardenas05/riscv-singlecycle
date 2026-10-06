@@ -4,7 +4,6 @@ module pc_adder (
     output logic [31:0] pc_plus_4
 );
 
-always_comb begin : pc_adder
-    pc_plus_4 = pc + 32'd4;
-end
+assign pc_plus_4 = pc + 32'd4;
+
 endmodule
