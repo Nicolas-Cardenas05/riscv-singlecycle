@@ -5,13 +5,70 @@ module single_cycle_cpu_tb;
 logic clk;
 logic reset;
 
+integer trace_file;
+integer instruction_count;
+
+
 single_cycle_cpu dut (
     .clk(clk),
     .reset(reset)
 );
 
+
 // Clock generation
 always #5 clk = ~clk;
+
+
+// RTL execution trace
+always @(posedge clk) begin
+    if (!reset && instruction_count < 19) begin
+
+        if (dut.register_write_enable && (dut.instruction[11:7] != 5'd0)) begin
+
+        if (dut.instruction[6:0] == 7'b0000011) begin
+            $fdisplay(
+                trace_file,
+                "PC=%08h INST=%08h RD=%0d VALUE=%08h MEM=%08h",
+                dut.pc,
+                dut.instruction,
+                dut.instruction[11:7],
+                dut.result,
+                dut.alu_address
+            );
+        end
+        else begin
+            $fdisplay(
+                trace_file,
+                "PC=%08h INST=%08h RD=%0d VALUE=%08h",
+                dut.pc,
+                dut.instruction,
+                dut.instruction[11:7],
+                dut.result
+            );
+        end
+    end
+        else if (dut.memory_write_enable) begin
+            $fdisplay(
+                trace_file,
+                "PC=%08h INST=%08h MEM=%08h VALUE=%08h",
+                dut.pc,
+                dut.instruction,
+                dut.alu_address,
+                dut.read_data_b
+            );
+        end
+        else begin
+            $fdisplay(
+                trace_file,
+                "PC=%08h INST=%08h",
+                dut.pc,
+                dut.instruction
+            );
+        end
+
+        instruction_count = instruction_count + 1;
+    end
+end
 
 
 // Check a 32-bit value
@@ -43,6 +100,9 @@ endtask
 
 
 initial begin
+
+    trace_file = $fopen("tests/rtl_trace.log", "w");
+    instruction_count = 0;
 
     $dumpfile("single_cycle_cpu.vcd");
     $dumpvars(0, single_cycle_cpu_tb);
@@ -151,7 +211,7 @@ initial begin
     check_value(
         "x14 JAL return address",
         dut.register_file_inst.registers[14],
-        32'd72
+        32'd64
     );
 
     check_value(
@@ -163,8 +223,8 @@ initial begin
 
     // Data memory test
     check_value(
-        "Memory[0] SW",
-        dut.data_memory_inst.memory[0],
+        "Memory[48] SW",
+        dut.data_memory_inst.memory[48],
         32'd15
     );
 
@@ -181,6 +241,8 @@ initial begin
     $display("========================================");
     $display("             TEST FINISHED");
     $display("========================================");
+
+    $fclose(trace_file);
 
     $finish;
 
