@@ -14,7 +14,7 @@ logic [31:0] pc;
 logic alu_a_selector;
 logic [31:0] src_a;
 
-logic [2:0] alu_control;
+logic [3:0] alu_control;
 logic [31:0] alu_result;
 logic [31:0] alu_address;
 
@@ -31,13 +31,23 @@ logic [31:0] memory_read_data;
 logic pc_selector;
 logic [31:0] pc_next;
 
-logic [1:0] imm_selector;
+logic [2:0] imm_selector;
 
 logic equal;
 
 logic register_write_enable;
 
 logic [31:0] instruction;
+
+logic less_than_signed;
+logic less_than_unsigned;
+
+logic [31:0] pc_target;
+logic jalr_selector;
+
+assign pc_target = jalr_selector
+                 ? {alu_address[31:1], 1'b0}
+                 : alu_address;
 
 srcb_mux srcb_mux_inst (
     .data_b(read_data_b),
@@ -80,12 +90,13 @@ data_memory data_memory_inst (
     .write_enable(memory_write_enable),
     .write_data(read_data_b),
     .address(alu_address),
+    .funct3(instruction[14:12]),
     .read_data(memory_read_data)
 );
 
 pc_mux pc_mux_inst (
     .pc_plus_4(pc_plus_4),
-    .alu_address(alu_address),
+    .alu_address(pc_target),
     .pc_selector(pc_selector),
     .pc_next(pc_next)
 );
@@ -111,7 +122,9 @@ extend extend_inst (
 comp comp_inst (
     .data_a(read_data_a),
     .data_b(read_data_b),
-    .equal(equal)
+    .equal(equal),
+    .less_than_signed(less_than_signed),
+    .less_than_unsigned(less_than_unsigned)
 );
 
 register_file register_file_inst (
@@ -143,7 +156,10 @@ controller controller_inst(
     .alu_a_selector(alu_a_selector),
     .alu_b_selector(alu_b_selector),
     .alu_result_selector(alu_result_selector),
-    .result_selector(result_selector)
+    .result_selector(result_selector),
+    .less_than_signed(less_than_signed),
+    .less_than_unsigned(less_than_unsigned),
+    .jalr_selector(jalr_selector)
 );
 
 endmodule
