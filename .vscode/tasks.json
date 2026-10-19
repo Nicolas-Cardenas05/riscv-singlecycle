@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run RISC-V Program",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "run",
+                "PROGRAM=${input:programName}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "programName",
+            "type": "promptString",
+            "description": "Program name inside tests/ (without .S)",
+            "default": "fibonacci"
+        }
+    ]
+}

@@ -1,4 +1,12 @@
+build/
 obj_dir/
+
 *.vcd
 *.fst
-*.log
+*.elf
+*.bin
+
+__pycache__/
+*.pyc
+
+program.mem

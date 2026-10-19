@@ -7,7 +7,7 @@ module instruction_memory (
 logic [31:0] irom [63:0];
 
 initial begin
-    $readmemh("program.mem", irom);
+    $readmemh("build/program.mem", irom);
 end
 
 assign instruction = irom[pc[7:2]];

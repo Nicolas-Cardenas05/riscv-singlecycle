@@ -1,11 +1,10 @@
-import re
 from pathlib import Path
-
+import re
 
 SPIKE_BASE = 0x80000000
 
-RTL_LOG = Path("tests/rtl_trace.log")
-SPIKE_LOG = Path("tests/spike.log")
+RTL_LOG = Path("build/logs/rtl_trace.log")
+SPIKE_LOG = Path("build/logs/spike.log")
 
 
 # ============================================================
