@@ -1,7 +1,13 @@
 `timescale 1ns/1ps
 module single_cycle_cpu (
     input logic clk,
-    input logic reset
+    input logic reset,
+    input logic [31:0] data_read,
+    output logic [31:0] data_address,
+    output logic [31:0] data_write,
+    output logic data_write_enable,
+    output logic [2:0] data_funct3,
+    output logic [31:0] debug_pc
 );
 
 logic [31:0] read_data_b;
@@ -49,6 +55,12 @@ assign pc_target = jalr_selector
                  ? {alu_address[31:1], 1'b0}
                  : alu_address;
 
+assign debug_pc = pc;
+assign data_write_enable = memory_write_enable;
+assign data_funct3 = instruction[14:12];
+assign data_address = alu_address;
+assign data_write = read_data_b;
+
 srcb_mux srcb_mux_inst (
     .data_b(read_data_b),
     .immediate(immediate),
@@ -80,18 +92,9 @@ ieu_result_mux ieu_result_mux_inst (
 
 result_mux result_mux_inst (
     .ieu_result(ieu_result),
-    .read_data(memory_read_data),
+    .read_data(data_read),
     .result_selector(result_selector),
     .result(result)
-);
-
-data_memory data_memory_inst (
-    .clk(clk),
-    .write_enable(memory_write_enable),
-    .write_data(read_data_b),
-    .address(alu_address),
-    .funct3(instruction[14:12]),
-    .read_data(memory_read_data)
 );
 
 pc_mux pc_mux_inst (

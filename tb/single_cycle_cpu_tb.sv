@@ -12,7 +12,11 @@ integer instruction_count;
 integer cycle_count;
 
 
-single_cycle_cpu dut (
+// ==========================================================
+// DEVICE UNDER TEST
+// ==========================================================
+
+soc_top dut (
     .clk(clk),
     .reset(reset)
 );
@@ -38,21 +42,24 @@ always @(posedge clk) begin
         // --------------------------------------------------
 
         if (
-            dut.register_write_enable &&
-            (dut.instruction[11:7] != 5'd0)
+            dut.single_cycle_cpu_inst.register_write_enable &&
+            (dut.single_cycle_cpu_inst.instruction[11:7] != 5'd0)
         ) begin
 
             // Load instructions also report memory address
-            if (dut.instruction[6:0] == 7'b0000011) begin
+            if (
+                dut.single_cycle_cpu_inst.instruction[6:0]
+                == 7'b0000011
+            ) begin
 
                 $fdisplay(
                     trace_file,
                     "PC=%08h INST=%08h RD=%0d VALUE=%08h MEM=%08h",
-                    dut.pc,
-                    dut.instruction,
-                    dut.instruction[11:7],
-                    dut.result,
-                    dut.alu_address
+                    dut.single_cycle_cpu_inst.pc,
+                    dut.single_cycle_cpu_inst.instruction,
+                    dut.single_cycle_cpu_inst.instruction[11:7],
+                    dut.single_cycle_cpu_inst.result,
+                    dut.data_address
                 );
 
             end
@@ -61,10 +68,10 @@ always @(posedge clk) begin
                 $fdisplay(
                     trace_file,
                     "PC=%08h INST=%08h RD=%0d VALUE=%08h",
-                    dut.pc,
-                    dut.instruction,
-                    dut.instruction[11:7],
-                    dut.result
+                    dut.single_cycle_cpu_inst.pc,
+                    dut.single_cycle_cpu_inst.instruction,
+                    dut.single_cycle_cpu_inst.instruction[11:7],
+                    dut.single_cycle_cpu_inst.result
                 );
 
             end
@@ -75,53 +82,64 @@ always @(posedge clk) begin
         // Memory store
         // --------------------------------------------------
 
-        else if (dut.memory_write_enable) begin
+        else if (dut.data_write_enable) begin
 
-            case (dut.instruction[14:12])
+            case (dut.data_funct3)
 
                 // SB
                 3'b000: begin
+
                     $fdisplay(
                         trace_file,
                         "PC=%08h INST=%08h MEM=%08h VALUE=%08h",
-                        dut.pc,
-                        dut.instruction,
-                        dut.alu_address,
-                        {24'd0, dut.read_data_b[7:0]}
+                        dut.single_cycle_cpu_inst.pc,
+                        dut.single_cycle_cpu_inst.instruction,
+                        dut.data_address,
+                        {24'd0, dut.data_write[7:0]}
                     );
+
                 end
+
 
                 // SH
                 3'b001: begin
+
                     $fdisplay(
                         trace_file,
                         "PC=%08h INST=%08h MEM=%08h VALUE=%08h",
-                        dut.pc,
-                        dut.instruction,
-                        dut.alu_address,
-                        {16'd0, dut.read_data_b[15:0]}
+                        dut.single_cycle_cpu_inst.pc,
+                        dut.single_cycle_cpu_inst.instruction,
+                        dut.data_address,
+                        {16'd0, dut.data_write[15:0]}
                     );
+
                 end
+
 
                 // SW
                 3'b010: begin
+
                     $fdisplay(
                         trace_file,
                         "PC=%08h INST=%08h MEM=%08h VALUE=%08h",
-                        dut.pc,
-                        dut.instruction,
-                        dut.alu_address,
-                        dut.read_data_b
+                        dut.single_cycle_cpu_inst.pc,
+                        dut.single_cycle_cpu_inst.instruction,
+                        dut.data_address,
+                        dut.data_write
                     );
+
                 end
 
+
                 default: begin
+
                     $fdisplay(
                         trace_file,
                         "PC=%08h INST=%08h",
-                        dut.pc,
-                        dut.instruction
+                        dut.single_cycle_cpu_inst.pc,
+                        dut.single_cycle_cpu_inst.instruction
                     );
+
                 end
 
             endcase
@@ -137,8 +155,8 @@ always @(posedge clk) begin
             $fdisplay(
                 trace_file,
                 "PC=%08h INST=%08h",
-                dut.pc,
-                dut.instruction
+                dut.single_cycle_cpu_inst.pc,
+                dut.single_cycle_cpu_inst.instruction
             );
 
         end
@@ -151,33 +169,47 @@ always @(posedge clk) begin
         // Terminal loop: jal x0, 0
         // --------------------------------------------------
 
-        if (dut.instruction == 32'h0000006F) begin
+        if (
+            dut.single_cycle_cpu_inst.instruction
+            == 32'h0000006F
+        ) begin
+
             trace_done = 1'b1;
+
         end
 
     end
 
 end
 
-// Simulated memory-mapped output port
+
+// ==========================================================
+// SIMULATED MEMORY-MAPPED OUTPUT PORT
+// ==========================================================
+
 always @(posedge clk) begin
 
     if (
         !reset &&
-        dut.memory_write_enable &&
-        (dut.alu_address == 32'h000000F0) &&
-        (dut.instruction[14:12] == 3'b010)
+        dut.data_write_enable &&
+        (dut.data_address == 32'h000000F0) &&
+        (dut.data_funct3 == 3'b010)
     ) begin
 
         $display(
             "CPU OUTPUT: %0d (0x%08h)",
-            dut.read_data_b,
-            dut.read_data_b
+            dut.data_write,
+            dut.data_write
         );
 
     end
 
 end
+
+
+// ==========================================================
+// SEVEN-SEGMENT DISPLAY HELPER
+// ==========================================================
 
 task automatic show_seven_segment (
     input logic [6:0] segments
@@ -206,6 +238,7 @@ begin
 
 
     $display("");
+
     $display(
         "7-SEGMENT: digit=%0d pattern=0x%02h",
         digit,
@@ -257,23 +290,28 @@ end
 
 endtask
 
-// Simulated seven-segment display
+
+// ==========================================================
+// SIMULATED SEVEN-SEGMENT DISPLAY
+// ==========================================================
+
 always @(posedge clk) begin
 
     if (
         !reset &&
-        dut.memory_write_enable &&
-        (dut.alu_address == 32'h000000F4) &&
-        (dut.instruction[14:12] == 3'b010)
+        dut.data_write_enable &&
+        (dut.data_address == 32'h000000F4) &&
+        (dut.data_funct3 == 3'b010)
     ) begin
 
         show_seven_segment(
-            dut.read_data_b[6:0]
+            dut.data_write[6:0]
         );
 
     end
 
 end
+
 
 // ==========================================================
 // TEST SEQUENCE
@@ -281,11 +319,21 @@ end
 
 initial begin
 
-    trace_file = $fopen("build/logs/rtl_trace.log", "w");
+    trace_file = $fopen(
+        "build/logs/rtl_trace.log",
+        "w"
+    );
+
 
     if (trace_file == 0) begin
-        $fatal(1, "Could not open tests/rtl_trace.log");
+
+        $fatal(
+            1,
+            "Could not open build/logs/rtl_trace.log"
+        );
+
     end
+
 
     instruction_count = 0;
     cycle_count = 0;
@@ -294,8 +342,15 @@ initial begin
     reset = 1'b1;
     trace_done = 1'b0;
 
-    $dumpfile("build/waves/single_cycle_cpu.vcd");
-    $dumpvars(0, single_cycle_cpu_tb);
+
+    $dumpfile(
+        "build/waves/single_cycle_cpu.vcd"
+    );
+
+    $dumpvars(
+        0,
+        single_cycle_cpu_tb
+    );
 
 
     // --------------------------------------------------
@@ -312,10 +367,17 @@ initial begin
     // EXECUTION
     // --------------------------------------------------
 
-    while (!trace_done && cycle_count < 5000) begin
+    while (
+        !trace_done &&
+        cycle_count < 5000
+    ) begin
+
         @(posedge clk);
+
         cycle_count = cycle_count + 1;
+
     end
+
 
     #1;
 
@@ -325,11 +387,13 @@ initial begin
     // --------------------------------------------------
 
     if (!trace_done) begin
+
         $fatal(
             1,
             "CPU did not reach terminal loop after %0d cycles",
             cycle_count
         );
+
     end
 
 
@@ -338,9 +402,19 @@ initial begin
     // --------------------------------------------------
 
     $display("");
-    $display("========================================");
-    $display("      SINGLE-CYCLE CPU TEST RESULTS");
-    $display("========================================");
+
+    $display(
+        "========================================"
+    );
+
+    $display(
+        "      SINGLE-CYCLE SOC TEST RESULTS"
+    );
+
+    $display(
+        "========================================"
+    );
+
 
     $display(
         "Executed instructions : %0d",
@@ -354,19 +428,30 @@ initial begin
 
     $display(
         "Final PC               : 0x%08h",
-        dut.pc
+        dut.single_cycle_cpu_inst.pc
     );
 
     $display(
         "Final instruction      : 0x%08h",
-        dut.instruction
+        dut.single_cycle_cpu_inst.instruction
     );
 
-    $display("Terminal loop reached  : YES");
+    $display(
+        "Terminal loop reached  : YES"
+    );
 
-    $display("========================================");
-    $display("              TEST PASSED");
-    $display("========================================");
+
+    $display(
+        "========================================"
+    );
+
+    $display(
+        "              TEST PASSED"
+    );
+
+    $display(
+        "========================================"
+    );
 
 
     $fclose(trace_file);
