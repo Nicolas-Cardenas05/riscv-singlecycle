@@ -12,6 +12,8 @@ logic data_write_enable;
 logic [2:0] data_funct3;
 logic [31:0] debug_pc;
 
+
+
 single_cycle_cpu single_cycle_cpu_inst (
     .clk(clk),
     .reset(reset),
