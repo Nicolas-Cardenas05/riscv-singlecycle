@@ -10,7 +10,7 @@ module data_memory (
     output logic [31:0] read_data
 );
 
-logic [31:0] memory [63:0];
+logic [31:0] memory [1023:0];
 
 logic [31:0] memory_word;
 logic [7:0] selected_byte;
@@ -21,7 +21,7 @@ logic [15:0] selected_half;
 // Select the 32-bit memory word
 // --------------------------------------------------
 
-assign memory_word = memory[address[7:2]];
+assign memory_word = memory[address[11:2]];
 
 
 // --------------------------------------------------
@@ -144,19 +144,19 @@ always_ff @(posedge clk) begin
                 case (address[1:0])
 
                     2'b00:
-                        memory[address[7:2]][7:0]
+                        memory[address[11:2]][7:0]
                             <= write_data[7:0];
 
                     2'b01:
-                        memory[address[7:2]][15:8]
+                        memory[address[11:2]][15:8]
                             <= write_data[7:0];
 
                     2'b10:
-                        memory[address[7:2]][23:16]
+                        memory[address[11:2]][23:16]
                             <= write_data[7:0];
 
                     2'b11:
-                        memory[address[7:2]][31:24]
+                        memory[address[11:2]][31:24]
                             <= write_data[7:0];
 
                     default: begin
@@ -171,11 +171,11 @@ always_ff @(posedge clk) begin
             3'b001: begin
 
                 if (address[1] == 1'b0) begin
-                    memory[address[7:2]][15:0]
+                    memory[address[11:2]][15:0]
                         <= write_data[15:0];
                 end
                 else begin
-                    memory[address[7:2]][31:16]
+                    memory[address[11:2]][31:16]
                         <= write_data[15:0];
                 end
 
@@ -184,7 +184,7 @@ always_ff @(posedge clk) begin
 
             // SW
             3'b010: begin
-                memory[address[7:2]]
+                memory[address[11:2]]
                     <= write_data;
             end
 

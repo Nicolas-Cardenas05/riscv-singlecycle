@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+
 module single_cycle_cpu (
     input logic clk,
     input logic reset,

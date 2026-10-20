@@ -4,13 +4,15 @@ module single_cycle_cpu_tb;
 
 logic clk;
 logic reset;
-
+logic [15:0] gpio_out;
+logic [15:0] gpio_in;
 logic trace_done;
-
 integer trace_file;
 integer instruction_count;
 integer cycle_count;
-
+logic [6:0] segments;
+logic [7:0] anodes;
+logic dp;
 
 // ==========================================================
 // DEVICE UNDER TEST
@@ -18,9 +20,13 @@ integer cycle_count;
 
 soc_top dut (
     .clk(clk),
-    .reset(reset)
+    .reset(reset),
+    .gpio_in(gpio_in),
+    .gpio_out(gpio_out),
+    .segments(segments),
+    .anodes(anodes),
+    .dp(dp)
 );
-
 
 // ==========================================================
 // CLOCK GENERATION
@@ -318,6 +324,8 @@ end
 // ==========================================================
 
 initial begin
+
+    gpio_in = 16'd0;
 
     trace_file = $fopen(
         "build/logs/rtl_trace.log",
