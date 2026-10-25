@@ -14,6 +14,11 @@ logic [6:0] segments;
 logic [7:0] anodes;
 logic dp;
 
+logic [3:0] vga_red;
+logic [3:0] vga_green;
+logic [3:0] vga_blue;
+logic vga_hsync;
+logic vga_vsync;
 // ==========================================================
 // DEVICE UNDER TEST
 // ==========================================================
@@ -25,7 +30,12 @@ soc_top dut (
     .gpio_out(gpio_out),
     .segments(segments),
     .anodes(anodes),
-    .dp(dp)
+    .dp(dp),
+    .vga_red(vga_red),
+    .vga_green(vga_green),
+    .vga_blue(vga_blue),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync)
 );
 
 // ==========================================================

@@ -40,12 +40,22 @@ module wishbone_interconnect (
     output logic [3:0] ram_sel_o,
     output logic ram_cyc_o,
     output logic ram_stb_o,
-    input logic ram_ack_i
+    input logic ram_ack_i,
+
+    output logic [31:0] vram_dat_o,
+    input logic [31:0] vram_dat_i,
+    output logic vram_we_o,
+    output logic [3:0] vram_sel_o,
+    output logic vram_cyc_o,
+    output logic vram_stb_o,
+    input logic vram_ack_i
 );
 
 localparam logic [31:2] LEDS_ADDRESS = 30'h0400_0000;
 localparam logic [31:2] SWITCHES_ADDRESS = 30'h0400_0001;
 localparam logic [31:2] SEVEN_SEGMENT_ADDRESS = 30'h0400_0400;
+localparam logic [31:2] VRAM_BASE = 30'h0800_0000;
+localparam logic [31:2] VRAM_END  = 30'h0800_4B00;
 
 always_comb begin
     leds_dat_o = wb_dat_i;
@@ -70,6 +80,11 @@ always_comb begin
     ram_sel_o = wb_sel_i;
     ram_cyc_o = 1'b0;
     ram_stb_o = 1'b0;
+    vram_dat_o = wb_dat_i;
+    vram_we_o = wb_we_i;
+    vram_sel_o = wb_sel_i;
+    vram_cyc_o = 1'b0;
+    vram_stb_o = 1'b0;
 
     if (wb_adr_i < 30'h0000_0400) begin
         ram_cyc_o = wb_cyc_i;
@@ -78,8 +93,16 @@ always_comb begin
         wb_ack_o = ram_ack_i;
     end
 
+    else if ((wb_adr_i >= VRAM_BASE) && (wb_adr_i < VRAM_END)) begin
+        vram_cyc_o = wb_cyc_i;
+        vram_stb_o = wb_stb_i;
+        wb_dat_o = vram_dat_i;
+        wb_ack_o = vram_ack_i;
+    end
+
     else begin
         case (wb_adr_i)
+
             LEDS_ADDRESS: begin
                 leds_cyc_o = wb_cyc_i;
                 leds_stb_o = wb_stb_i;
@@ -103,6 +126,7 @@ always_comb begin
 
             default: begin
                 wb_dat_o = 32'd0;
+
                 if (wb_cyc_i && wb_stb_i)
                     wb_ack_o = 1'b1;
             end

@@ -86,19 +86,18 @@ ACK_I   -> wb_ack_i
 
 Implemented WISHBONE slaves:
 
-wishbone_leds.sv
-
-wishbone_switches.sv
-
-wishbone_seven_segment.sv
+- wishbone_ram.sv
+- wishbone_leds.sv
+- wishbone_switches.sv
+- wishbone_seven_segment.sv
 
 ## Memory Map
 
-RISC-V byte address | WISHBONE ADR | Peripheral
---------------------|--------------|-----------
-0x10000000          | 0x04000000   | LEDs
-0x10000004          | 0x04000001   | Switches
-0x10001000          | 0x04000400   | Seven-segment display
+| RISC-V byte address | WISHBONE ADR | Slave |
+| 0x00000000 - 0x00000FFF | 0x00000000 - 0x000003FF | RAM |
+| 0x10000000 | 0x04000000 | LEDs |
+| 0x10000004 | 0x04000001 | Switches |
+| 0x10001000 | 0x04000400 | Seven-segment |
 
 ## Byte Select Mapping
 

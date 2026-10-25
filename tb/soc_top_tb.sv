@@ -23,6 +23,12 @@ integer wishbone_transfers;
 integer wishbone_reads;
 integer wishbone_writes;
 
+logic [3:0] vga_red;
+logic [3:0] vga_green;
+logic [3:0] vga_blue;
+logic vga_hsync;
+logic vga_vsync;
+
 soc_top dut (
     .clk(clk),
     .reset(reset),
@@ -30,7 +36,12 @@ soc_top dut (
     .gpio_out(gpio_out),
     .segments(segments),
     .anodes(anodes),
-    .dp(dp)
+    .dp(dp),
+    .vga_red(vga_red),
+    .vga_green(vga_green),
+    .vga_blue(vga_blue),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync)
 );
 
 

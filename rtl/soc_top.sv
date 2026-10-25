@@ -7,7 +7,13 @@ module soc_top (
     output logic [15:0] gpio_out,
     output logic [6:0] segments,
     output logic [7:0] anodes,
-    output logic dp
+    output logic dp,
+
+    output logic [3:0] vga_red,
+    output logic [3:0] vga_green,
+    output logic [3:0] vga_blue,
+    output logic vga_hsync,
+    output logic vga_vsync
 );
 
 logic [31:0] data_read;
@@ -63,6 +69,17 @@ logic [3:0] ram_wb_sel;
 logic ram_wb_cyc;
 logic ram_wb_stb;
 logic ram_wb_ack;
+
+logic [31:0] vram_wb_dat_o;
+logic [31:0] vram_wb_dat_i;
+logic vram_wb_we;
+logic [3:0] vram_wb_sel;
+logic vram_wb_cyc;
+logic vram_wb_stb;
+logic vram_wb_ack;
+
+logic [14:0] vga_word_address;
+logic [31:0] vga_word_data;
 
 assign cpu_stall = wb_stall;
 assign wb_request = data_request;
@@ -140,7 +157,15 @@ wishbone_interconnect wishbone_interconnect_inst (
     .ram_sel_o(ram_wb_sel),
     .ram_cyc_o(ram_wb_cyc),
     .ram_stb_o(ram_wb_stb),
-    .ram_ack_i(ram_wb_ack)
+    .ram_ack_i(ram_wb_ack),
+
+    .vram_dat_o(vram_wb_dat_o),
+    .vram_dat_i(vram_wb_dat_i),
+    .vram_we_o(vram_wb_we),
+    .vram_sel_o(vram_wb_sel),
+    .vram_cyc_o(vram_wb_cyc),
+    .vram_stb_o(vram_wb_stb),
+    .vram_ack_i(vram_wb_ack)
 );
 
 wishbone_ram wishbone_ram_inst (
@@ -154,6 +179,33 @@ wishbone_ram wishbone_ram_inst (
     .wb_cyc_i(ram_wb_cyc),
     .wb_stb_i(ram_wb_stb),
     .wb_ack_o(ram_wb_ack)
+);
+
+wishbone_vram wishbone_vram_inst (
+    .clk(clk),
+    .reset(reset),
+    .wb_adr_i(wb_adr),
+    .wb_dat_i(vram_wb_dat_o),
+    .wb_dat_o(vram_wb_dat_i),
+    .wb_we_i(vram_wb_we),
+    .wb_sel_i(vram_wb_sel),
+    .wb_cyc_i(vram_wb_cyc),
+    .wb_stb_i(vram_wb_stb),
+    .wb_ack_o(vram_wb_ack),
+    .vga_word_address(vga_word_address),
+    .vga_word_data(vga_word_data)
+);
+
+vga_controller vga_controller_inst (
+    .clk(clk),
+    .reset(reset),
+    .vga_word_data(vga_word_data),
+    .vga_word_address(vga_word_address),
+    .vga_red(vga_red),
+    .vga_green(vga_green),
+    .vga_blue(vga_blue),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync)
 );
 
 wishbone_leds wishbone_leds_inst (
