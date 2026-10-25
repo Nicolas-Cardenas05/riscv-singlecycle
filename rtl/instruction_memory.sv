@@ -4,11 +4,11 @@ module instruction_memory (
     output logic [31:0] instruction
 );
 
-logic [31:0] irom [63:0];
+logic [31:0] irom [0:1023];
 
 initial begin
-    $readmemh("build/program.mem", irom);
+    $readmemh("program.mem", irom);
 end
 
-assign instruction = irom[pc[7:2]];
+assign instruction = irom[pc[11:2]];
 endmodule

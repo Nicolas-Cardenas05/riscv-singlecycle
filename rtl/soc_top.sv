@@ -13,7 +13,13 @@ module soc_top (
     output logic [3:0] vga_green,
     output logic [3:0] vga_blue,
     output logic vga_hsync,
-    output logic vga_vsync
+    output logic vga_vsync,
+
+    input logic btn_up,
+    input logic btn_down,
+    input logic btn_left,
+    input logic btn_right,
+    input logic btn_center
 );
 
 logic [31:0] data_read;
@@ -80,6 +86,11 @@ logic vram_wb_ack;
 
 logic [14:0] vga_word_address;
 logic [31:0] vga_word_data;
+
+logic [31:0] buttons_wb_dat_i;
+logic buttons_wb_cyc;
+logic buttons_wb_stb;
+logic buttons_wb_ack;
 
 assign cpu_stall = wb_stall;
 assign wb_request = data_request;
@@ -165,7 +176,12 @@ wishbone_interconnect wishbone_interconnect_inst (
     .vram_sel_o(vram_wb_sel),
     .vram_cyc_o(vram_wb_cyc),
     .vram_stb_o(vram_wb_stb),
-    .vram_ack_i(vram_wb_ack)
+    .vram_ack_i(vram_wb_ack),
+
+    .buttons_dat_i(buttons_wb_dat_i),
+    .buttons_cyc_o(buttons_wb_cyc),
+    .buttons_stb_o(buttons_wb_stb),
+    .buttons_ack_i(buttons_wb_ack)
 );
 
 wishbone_ram wishbone_ram_inst (
@@ -246,6 +262,20 @@ wishbone_seven_segment wishbone_seven_segment_inst (
     .segments(segments),
     .anodes(anodes),
     .dp(dp)
+);
+
+wishbone_buttons wishbone_buttons_inst (
+    .clk(clk),
+    .reset(reset),
+    .btn_up(btn_up),
+    .btn_down(btn_down),
+    .btn_left(btn_left),
+    .btn_right(btn_right),
+    .btn_center(btn_center),
+    .wb_dat_o(buttons_wb_dat_i),
+    .wb_cyc_i(buttons_wb_cyc),
+    .wb_stb_i(buttons_wb_stb),
+    .wb_ack_o(buttons_wb_ack)
 );
 
 assign data_read = wb_data_read;
