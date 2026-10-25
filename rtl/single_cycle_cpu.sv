@@ -4,11 +4,13 @@ module single_cycle_cpu (
     input logic clk,
     input logic reset,
     input logic [31:0] data_read,
+    input logic stall,
     output logic [31:0] data_address,
     output logic [31:0] data_write,
     output logic data_write_enable,
     output logic [2:0] data_funct3,
-    output logic [31:0] debug_pc
+    output logic [31:0] debug_pc,
+    output logic data_request
 );
 
 logic [31:0] read_data_b;
@@ -109,7 +111,8 @@ pc_register pc_register_inst (
     .clk(clk),
     .reset(reset),
     .pc_next(pc_next),
-    .pc(pc)
+    .pc(pc),
+    .enable(!stall)
 );
 
 pc_adder pc_adder_inst (
@@ -133,7 +136,7 @@ comp comp_inst (
 
 register_file register_file_inst (
     .clk(clk),
-    .write_enable(register_write_enable),
+    .write_enable(register_write_enable && !stall),
     .address_a(instruction[19:15]),
     .address_b(instruction[24:20]),
     .write_address(instruction[11:7]),
@@ -163,7 +166,8 @@ controller controller_inst(
     .result_selector(result_selector),
     .less_than_signed(less_than_signed),
     .less_than_unsigned(less_than_unsigned),
-    .jalr_selector(jalr_selector)
+    .jalr_selector(jalr_selector),
+    .data_request(data_request)
 );
 
 endmodule

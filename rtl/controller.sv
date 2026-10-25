@@ -4,11 +4,9 @@ module controller (
     input logic [6:0] opcode,
     input logic [2:0] funct3,
     input logic funct7_b5,
-
     input logic equal,
     input logic less_than_signed,
     input logic less_than_unsigned,
-
     output logic [3:0] alu_control,
     output logic memory_write_enable,
     output logic [2:0] imm_selector,
@@ -18,7 +16,8 @@ module controller (
     output logic alu_b_selector,
     output logic alu_result_selector,
     output logic result_selector,
-    output logic jalr_selector
+    output logic jalr_selector,
+    output logic data_request
 );
 
 always_comb begin : controller_logic
@@ -34,6 +33,7 @@ always_comb begin : controller_logic
     alu_result_selector   = 1'b0;
     result_selector       = 1'b0;
     jalr_selector         = 1'b0;
+    data_request          = 1'b0;
 
 
     case (opcode)
@@ -205,6 +205,7 @@ always_comb begin : controller_logic
                     alu_b_selector = 1'b1;
                     result_selector = 1'b1;
                     register_write_enable = 1'b1;
+                    data_request = 1'b1;
                 end
 
 
@@ -231,6 +232,7 @@ always_comb begin : controller_logic
                     imm_selector = 3'b001;
                     alu_b_selector = 1'b1;
                     memory_write_enable = 1'b1;
+                    data_request = 1'b1;
                 end
 
 

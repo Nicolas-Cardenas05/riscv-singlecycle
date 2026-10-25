@@ -327,3 +327,63 @@ help:
 >@echo "  make wave"
 >@echo "  make clean"
 >@echo ""
+
+.PHONY: soc-test soc-program soc-sim
+
+
+soc-program:
+>@mkdir -p build/elf
+>@mkdir -p build/bin
+>@echo ""
+>@echo "========================================"
+>@echo " Building SoC program: $(PROGRAM)"
+>@echo "========================================"
+>$(RISCV_GCC) \
+>	-march=rv32i \
+>	-mabi=ilp32 \
+>	-nostdlib \
+>	-nostartfiles \
+>	-Wl,--no-relax \
+>	-Wl,--build-id=none \
+>	-T $(LINKER) \
+>	-o $(ELF) \
+>	$(ASM)
+
+>$(RISCV_OBJCOPY) \
+>	-O binary \
+>	-j .text \
+>	$(ELF) \
+>	$(BIN)
+
+>python3 scripts/bin_to_mem.py \
+>	$(BIN) \
+>	$(MEM)
+
+>cp $(MEM) program.mem
+
+
+soc-sim:
+>@mkdir -p build/obj_soc
+>@echo ""
+>@echo "========================================"
+>@echo " Building SoC simulator"
+>@echo "========================================"
+
+>verilator \
+>	--binary \
+>	--trace \
+>	--timing \
+>	--Mdir build/obj_soc \
+>	--top-module soc_top_tb \
+>	rtl/*.sv \
+>	tb/soc_top_tb.sv
+
+
+soc-test: soc-program soc-sim
+>@echo ""
+>@echo "========================================"
+>@echo " Running WISHBONE SoC test"
+>@echo "========================================"
+>@echo ""
+
+>./build/obj_soc/Vsoc_top_tb
